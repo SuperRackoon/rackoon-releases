@@ -1,0 +1,73 @@
+# Workflow réutilisable : compile une app Rackoon et la publie ici.
+#
+# Appelé depuis le dépôt de chaque app (.github/workflows/release.yml) :
+#
+#   jobs:
+#     publish:
+#       uses: SuperRackoon/rackoon-releases/.github/workflows/publish-app.yml@main
+#       secrets: inherit
+#
+# Le dépôt de l'app doit avoir un secret RELEASES_TOKEN : un jeton GitHub
+# avec le droit "Contents: Read and write" sur rackoon-releases.
+#
+# Version publiée : <majeur>.<mineur> de package.json + numéro du build
+# (0.1.0 dans package.json → 0.1.37 au 37e build).
+name: Publier une app Rackoon
+
+on:
+  workflow_call:
+    inputs:
+      prebuild:
+        description: Commande lancée avant electron-builder (ex. "npx electron-vite build")
+        type: string
+        default: ''
+    secrets:
+      RELEASES_TOKEN:
+        required: true
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Code de l'app
+        uses: actions/checkout@v4
+        with:
+          path: app
+
+      - name: Dépôt des téléchargements
+        uses: actions/checkout@v4
+        with:
+          repository: SuperRackoon/rackoon-releases
+          token: ${{ secrets.RELEASES_TOKEN }}
+          path: releases
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Numéro de version
+        working-directory: app
+        shell: bash
+        run: node ../releases/scripts/prepare.js "${{ github.run_number }}"
+
+      - name: Dépendances
+        working-directory: app
+        run: npm ci
+
+      - name: Pré-compilation
+        if: inputs.prebuild != ''
+        working-directory: app
+        run: ${{ inputs.prebuild }}
+
+      - name: Compilation (zip)
+        working-directory: app
+        run: npx electron-builder --win zip --x64 --publish=never
+
+      - name: Publication
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+        run: node releases/scripts/publish.js app releases
