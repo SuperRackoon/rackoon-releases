@@ -8,15 +8,9 @@
 // jamais une version dont le zip n'existe pas encore.
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
-const { execFileSync } = require('child_process');
+const { REPO, run, tryRun, readJson, fileInfo, updateStable } = require('./stable');
 
-const REPO = 'SuperRackoon/rackoon-releases';
 const [appDir, releasesDir] = process.argv.slice(2).map(p => path.resolve(p));
-
-const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }).trim();
-const tryRun = (cmd, args, cwd) => { try { run(cmd, args, cwd); return true; } catch (_) { return false; } };
-const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 
 const pkg = readJson(path.join(appDir, 'package.json'));
 const manifest = readJson(path.join(appDir, 'rackoon.json'));
@@ -30,8 +24,7 @@ const zips = fs.readdirSync(distDir).filter(f => f.endsWith('.zip'));
 if (zips.length !== 1) throw new Error(`un seul zip attendu dans dist/, trouvé : ${zips.join(', ') || 'aucun'}`);
 const zipPath = path.join(distDir, zips[0]);
 const zipName = zips[0];
-const size = fs.statSync(zipPath).size;
-const sha256 = crypto.createHash('sha256').update(fs.readFileSync(zipPath)).digest('hex');
+const { size, sha256 } = fileInfo(zipPath);
 
 const commit = run('git', ['rev-parse', '--short', 'HEAD'], appDir);
 const notes = run('git', ['log', '-1', '--format=%B'], appDir);
@@ -48,10 +41,9 @@ if (tryRun('gh', ['release', 'view', tag, '--repo', REPO])) {
 }
 const url = `https://github.com/${REPO}/releases/download/${tag}/${encodeURIComponent(zipName)}`;
 
-// ── 2 & 3. Icône + stable.json, avec nouvelles tentatives si une autre app
-// publie en même temps (on repart toujours de la dernière version distante).
-let iconRel = null;
-function applyChanges() {
+// ── 2 & 3. Icône + stable.json ─────────────────────────────────────────────
+updateStable(releasesDir, `${manifest.name || id} ${version}`, (stable) => {
+  let iconRel = null;
   if (manifest.icon) {
     const src = path.join(appDir, manifest.icon);
     if (fs.existsSync(src)) {
@@ -60,9 +52,6 @@ function applyChanges() {
       fs.copyFileSync(src, path.join(releasesDir, iconRel));
     }
   }
-  const stableFile = path.join(releasesDir, 'stable.json');
-  const stable = fs.existsSync(stableFile) ? readJson(stableFile) : { schema: 1, apps: {} };
-  stable.apps = stable.apps || {};
   stable.apps[id] = {
     version,
     url,
@@ -80,20 +69,4 @@ function applyChanges() {
     icon: iconRel ? `https://raw.githubusercontent.com/${REPO}/main/${iconRel}` : null,
     ...(manifest.minLauncher ? { minLauncher: manifest.minLauncher } : {}),
   };
-  fs.writeFileSync(stableFile, JSON.stringify(stable, null, 2) + '\n');
-}
-
-run('git', ['config', 'user.name', 'github-actions[bot]'], releasesDir);
-run('git', ['config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'], releasesDir);
-
-for (let attempt = 1; ; attempt++) {
-  run('git', ['fetch', 'origin', 'main'], releasesDir);
-  run('git', ['reset', '--hard', 'origin/main'], releasesDir);
-  applyChanges();
-  run('git', ['add', '-A'], releasesDir);
-  if (tryRun('git', ['diff', '--cached', '--quiet'], releasesDir)) { console.log('stable.json déjà à jour'); break; }
-  run('git', ['commit', '-m', `${manifest.name || id} ${version}`], releasesDir);
-  if (tryRun('git', ['push', 'origin', 'HEAD:main'], releasesDir)) { console.log(`stable.json → ${id} ${version}`); break; }
-  if (attempt >= 5) throw new Error('impossible de pousser stable.json après 5 tentatives');
-  console.log(`push refusé (tentative ${attempt}), nouvel essai…`);
-}
+});

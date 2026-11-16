@@ -1,0 +1,59 @@
+# Workflow réutilisable : compile l'installeur du launcher et le publie ici.
+#
+# Appelé depuis rackoon-launcher-v01 (.github/workflows/release.yml) :
+#
+#   jobs:
+#     publish:
+#       uses: SuperRackoon/rackoon-releases/.github/workflows/publish-launcher.yml@main
+#       secrets: inherit
+#
+# Même secret RELEASES_TOKEN que pour les apps.
+name: Publier le launcher
+
+on:
+  workflow_call:
+    secrets:
+      RELEASES_TOKEN:
+        required: true
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Code du launcher
+        uses: actions/checkout@v5
+        with:
+          path: app
+
+      - name: Dépôt des téléchargements
+        uses: actions/checkout@v5
+        with:
+          repository: SuperRackoon/rackoon-releases
+          token: ${{ secrets.RELEASES_TOKEN }}
+          path: releases
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Numéro de version
+        working-directory: app
+        shell: bash
+        run: node ../releases/scripts/prepare.js "${{ github.run_number }}"
+
+      - name: Dépendances
+        working-directory: app
+        run: npm ci
+
+      - name: Compilation (installeur)
+        working-directory: app
+        run: npx electron-builder --win nsis --x64 --publish=never
+
+      - name: Publication
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+        run: node releases/scripts/publish-launcher.js app releases

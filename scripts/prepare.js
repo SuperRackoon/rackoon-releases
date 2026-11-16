@@ -7,7 +7,8 @@ const build = Number(process.argv[2]);
 if (!Number.isInteger(build) || build < 0) throw new Error(`numéro de build invalide : ${process.argv[2]}`);
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-const manifest = JSON.parse(fs.readFileSync('rackoon.json', 'utf8'));
+// Le launcher n'a pas de rackoon.json (sinon il apparaîtrait dans sa propre liste).
+const manifest = fs.existsSync('rackoon.json') ? JSON.parse(fs.readFileSync('rackoon.json', 'utf8')) : { id: pkg.name };
 const [major, minor] = String(pkg.version || '0.1.0').split('.');
 pkg.version = `${Number(major) || 0}.${Number(minor) || 0}.${build}`;
 fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
