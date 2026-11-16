@@ -1,4 +1,25 @@
 {
   "schema": 1,
-  "apps": {}
+  "apps": {
+    "music": {
+      "version": "0.1.1",
+      "url": "https://github.com/SuperRackoon/rackoon-releases/releases/download/music-v0.1.1/rackoon-music-0.1.1-win-x64.zip",
+      "size": 142465787,
+      "sha256": "ab0cef62b1e6b6d3a2a25327f727e24807f96463cc240b7443ccaf67fb6ec097",
+      "notes": "Publication automatique à chaque push sur main",
+      "commit": "2191a65",
+      "publishedAt": "2026-11-16T09:31:23.230Z",
+      "name": "Rackoon Music",
+      "tagline": "Ta bibliothèque musicale, rangée et prête à écouter.",
+      "description": "Lecteur audio pour grande bibliothèque : scan des dossiers, classement par artiste et album, playlists, tags MusicBrainz / Discogs et écoute à distance depuis le mobile.",
+      "accent": "#e8a020",
+      "tags": [
+        "Musique",
+        "Bibliothèque",
+        "Playlists"
+      ],
+      "order": 1,
+      "icon": "https://raw.githubusercontent.com/SuperRackoon/rackoon-releases/main/icons/music.png"
+    }
+  }
 }
