@@ -21,5 +21,14 @@
       "order": 1,
       "icon": "https://raw.githubusercontent.com/SuperRackoon/rackoon-releases/main/icons/music.png"
     }
+  },
+  "launcher": {
+    "version": "1.0.1",
+    "url": "https://github.com/SuperRackoon/rackoon-releases/releases/download/launcher/Rackoon-Launcher-Setup.exe",
+    "size": 87372255,
+    "sha256": "4e93400e34abf579671c6025d124d54e4d645ae7ef9fd2da0698cac7875ea2e0",
+    "notes": "Launcher installable et mise à jour automatique",
+    "commit": "fcd3397",
+    "publishedAt": "2026-11-23T23:24:00.225Z"
   }
 }
