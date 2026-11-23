@@ -20,6 +20,26 @@
       ],
       "order": 1,
       "icon": "https://raw.githubusercontent.com/SuperRackoon/rackoon-releases/main/icons/music.png"
+    },
+    "budget": {
+      "version": "0.1.2",
+      "url": "https://github.com/SuperRackoon/rackoon-releases/releases/download/budget-v0.1.2/rackoon-budget-0.1.2-win-x64.zip",
+      "size": 135080279,
+      "sha256": "cdc7ee2e164e2dbe0c3c062f726a17a137d63be6fa83dc108187a30e75b6e3b6",
+      "notes": "Rackoon Budget v0.1 : comptes, opérations, import OFX/CSV, budget",
+      "commit": "a1a9050",
+      "publishedAt": "2026-11-23T23:24:21.937Z",
+      "name": "Rackoon Budget",
+      "tagline": "Tes comptes, tes dépenses et ton budget du mois, au même endroit.",
+      "description": "Suivi de comptes et de budget : opérations catégorisées automatiquement, import des relevés bancaires (OFX, CSV), budget mensuel par catégorie et tableau de bord. Tout reste sur ton PC.",
+      "accent": "#3fb57a",
+      "tags": [
+        "Budget",
+        "Comptes",
+        "Import bancaire"
+      ],
+      "order": 5,
+      "icon": "https://raw.githubusercontent.com/SuperRackoon/rackoon-releases/main/icons/budget.png"
     }
   },
   "launcher": {
